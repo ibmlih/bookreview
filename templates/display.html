@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Search for Books
+    Results
 {% endblock %}
 
 {% block body %}
@@ -17,5 +17,22 @@
             </div>
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
+    </div>
+
+    <div class="container">
+        <br>
+        {% if result == []%}
+            <h3> No result found </h3>
+        {% endif %}
+
+        <ol>
+            {% for row in result %}
+            <br>
+                <li>
+                    <a href="{{ url_for('bookinfo', title=row.title, author=row.author, year=row.year, isbn=row.isbn) }}"> {{ row.title }}  </a>
+                    by {{ row.author }}
+                </li>
+            {% endfor %}
+        </ol>
     </div>
 {% endblock %}

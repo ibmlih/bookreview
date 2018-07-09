@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Info
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <br>
+        <h1> Title: {{ title }} </h1>
+        <h3> Author: {{ author }} </h3>
+        <h4> Publication year: {{ year }} </h4>
+        <h5> ISBN: {{ isbn }} </h5>
+        <br>
+        <h4> From Goodreads:
+        <ul>
+            <li><h4> Average Rating: {{ average_rating }} </h4></li>
+            <li><h4> Number of Ratings Received: {{ number_rating }} </h4></li>
+        </ul>
+    </div>
+{% endblock %}

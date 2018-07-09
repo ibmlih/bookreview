@@ -1,4 +1,4 @@
-import os
+import os, requests
 
 from password import isStrongPassword
 from flask import Flask, session, request, render_template, g, redirect, url_for
@@ -28,6 +28,7 @@ KEY = '11lde3d29lqXUBzAdHwQ'
 # Home
 @app.route("/", methods=['GET', 'POST'])
 def index():
+    # Trying to login
     if request.method == 'POST':
         username = request.form.get("username")
         password = request.form.get("password")
@@ -35,31 +36,66 @@ def index():
         # Checking if username and password exist
         if db.execute('SELECT "username", "password" FROM "user" WHERE "username" = :username\
             and "password" = :password', {"username": username, "password":password}).rowcount == 1:
+
+            # Logging in
             session["user"] = username
             return redirect(url_for('search'))
+
+        # Error
         else:
             return render_template("error.html", msg="Username or password invalid.", url="index")
 
-    elif 'user' not in session:
-        return render_template("index.html")
-
-    else:
+    # Already logged in
+    elif 'user' in session:
         return redirect(url_for('search'))
 
-
-@app.before_request
-def before_request():
-    g.user = None
-    if 'user' in session:
-        g.user = session['user']
+    else:
+        return render_template("index.html")
 
 
-@app.route("/search")
+@app.route("/search", methods=['GET', 'POST'])
 def search():
-    # If logged in
-    if g.user:
+    # Display Search Bar
+    if g.user and request.method == 'GET':
         return render_template("search.html")
-        
+
+    # Searching
+    elif g.user and request.method == 'POST':
+        search = request.form.get("search")
+        return redirect(url_for('display', search=search))
+
+    # Not logged in
+    else:
+        return render_template("error.html", msg="Please login first.", url="index")
+
+
+@app.route("/search/<string:search>")
+def display(search):
+    if g.user:
+        result = db.execute('SELECT "title", "author", "year", "isbn" FROM "book" WHERE UPPER("title") LIKE UPPER(:search)\
+            OR UPPER("author") LIKE UPPER(:search) OR UPPER("isbn") LIKE UPPER(:search)', {"search":'%'+search+'%'}).fetchall()
+
+        return render_template("display.html", result=result)
+
+    else:
+        return render_template("error.html", msg="Please login first.", url="index")
+
+
+@app.route("/bookinfo")
+def bookinfo():
+    if g.user:
+        title = request.args.get("title")
+        author = request.args.get("author")
+        year = request.args.get("year")
+        isbn = request.args.get("isbn")
+
+        # Goodreads API
+        res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": KEY, "isbns": isbn})
+        average_rating = res.json()['books'][0]['average_rating']
+        number_rating = res.json()['books'][0]['work_ratings_count']
+
+        return render_template("bookinfo.html", title=title, author=author, year=year, isbn=isbn, average_rating=average_rating, number_rating=number_rating)
+
     else:
         return render_template("error.html", msg="Please login first.", url="index")
 
@@ -110,3 +146,10 @@ def signup():
 def logout():
     session.pop("user", None)
     return redirect(url_for('index'))
+
+
+@app.before_request
+def before_request():
+    g.user = None
+    if 'user' in session:
+        g.user = session['user']
