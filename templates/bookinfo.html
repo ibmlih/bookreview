@@ -12,10 +12,30 @@
         <h4> Publication year: {{ year }} </h4>
         <h5> ISBN: {{ isbn }} </h5>
         <br>
+        <h4> User ratings: {{ avgRating }} (out of {{ ratingNum }} users)
+        <br>
         <h4> From Goodreads:
         <ul>
             <li><h4> Average Rating: {{ average_rating }} </h4></li>
             <li><h4> Number of Ratings Received: {{ number_rating }} </h4></li>
         </ul>
+        <br>
+        <h2> Leave a Review </h2>
+        <br>
+
+        <form action={{ url_for( 'bookinfo', isbn=isbn ) }} method="post">
+            <div class="form-group">
+                <select class="custom-select" name="rating">
+                      <option selected>Ratings</option>
+                      <option value="1">1 (Poor)</option>
+                      <option value="2">2 (Below Average)</option>
+                      <option value="3">3 (Average)</option>
+                      <option value="4">4 (Great)</option>
+                      <option value="5">5 (Excellent)</option>
+                </select>
+                <textarea class="form-control" name="review" id="exampleFormControlTextarea1" rows="3" placeholder="Optional Description (max char: 500)"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"> Submit </button>
+        </form>
     </div>
 {% endblock %}

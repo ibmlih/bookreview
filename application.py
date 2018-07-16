@@ -1,7 +1,7 @@
 import os, requests
 
 from password import isStrongPassword
-from flask import Flask, session, request, render_template, g, redirect, url_for
+from flask import Flask, session, request, render_template, g, redirect, url_for, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -81,20 +81,58 @@ def display(search):
         return render_template("error.html", msg="Please login first.", url="index")
 
 
-@app.route("/bookinfo")
+@app.route("/bookinfo", methods=['GET', 'POST'])
 def bookinfo():
-    if g.user:
+    if g.user and request.method == "GET":
         title = request.args.get("title")
         author = request.args.get("author")
         year = request.args.get("year")
         isbn = request.args.get("isbn")
+
+        rating, ratingNum, avgRating = 0, 0, 0.0
+
+        # Check if the book exists in the table
+        # Then gets the ratings from the database
+        if db.execute('SELECT "isbn" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).rowcount > 0:
+            rating = list(db.execute('SELECT "ratings" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())[0]
+            ratingNum = list(db.execute('SELECT "ratingsNum" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())[0]
+            avgRating = int(rating) / int(ratingNum)
 
         # Goodreads API
         res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": KEY, "isbns": isbn})
         average_rating = res.json()['books'][0]['average_rating']
         number_rating = res.json()['books'][0]['work_ratings_count']
 
-        return render_template("bookinfo.html", title=title, author=author, year=year, isbn=isbn, average_rating=average_rating, number_rating=number_rating)
+        return render_template("bookinfo.html", title=title, author=author, year=year, isbn=isbn,
+            average_rating=average_rating, number_rating=number_rating, avgRating=avgRating, ratingNum=ratingNum)
+
+    # Submitting Review
+    if g.user and request.method == "POST":
+        isbn = request.args.get("isbn")
+        rating = request.form.get("rating")
+        review = request.form.get("review")
+
+        # No ratings selected
+        if rating == "Ratings":
+            return render_template("error.html", msg="Please rate the book.", url="search")
+
+        # No optional review
+        elif not review:
+            # Check if the book exists in the table
+            if db.execute('SELECT "isbn" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).rowcount > 0:
+                db.execute('UPDATE "bookreview" SET "ratings" = "ratings" + :ratings, "ratingsNum" = "ratingsNum" + 1', {"ratings":rating})
+                db.commit()
+
+            # Book does not exist
+            else:
+                # Insert into database
+                db.execute('INSERT INTO "bookreview" ("isbn", "ratings", "ratingsNum") VALUES (:isbn, :ratings, :ratingsNum)',
+                    {"isbn":isbn, "ratings":rating, "ratingsNum": 1})
+                db.commit()
+
+        # Optional review
+        else:
+            return "Nothing"
 
     else:
         return render_template("error.html", msg="Please login first.", url="index")
