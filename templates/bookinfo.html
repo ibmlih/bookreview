@@ -14,16 +14,28 @@
         <br>
         <h4> User ratings: {{ avgRating }} (out of {{ ratingNum }} users)
         <br>
-        <h4> From Goodreads:
+        <br>
+        <h3> From Goodreads: </h3>
         <ul>
-            <li><h4> Average Rating: {{ average_rating }} </h4></li>
-            <li><h4> Number of Ratings Received: {{ number_rating }} </h4></li>
+            <li><h3> Average Rating: {{ average_rating }} </h3></li>
+            <li><h3> Number of Ratings Received: {{ number_rating }} </h3></li>
         </ul>
+        <br>
+        <h2> Reviews </h2>
+        <ul>
+            {% for username, review in reviews.items() %}
+                <li> {{ review }} <br> - {{ username }}</li>
+            {% endfor %}
+            {% if not reviews %}
+                No Reviews
+            {% endif %}
+        </ul>
+
         <br>
         <h2> Leave a Review </h2>
         <br>
 
-        <form action={{ url_for( 'bookinfo', isbn=isbn ) }} method="post">
+        <form action={{ url_for( 'bookinfo', isbn=isbn, title=title, author=author, year=year ) }} method="post">
             <div class="form-group">
                 <select class="custom-select" name="rating">
                       <option selected>Ratings</option>
@@ -33,7 +45,7 @@
                       <option value="4">4 (Great)</option>
                       <option value="5">5 (Excellent)</option>
                 </select>
-                <textarea class="form-control" name="review" id="exampleFormControlTextarea1" rows="3" placeholder="Optional Description (max char: 500)"></textarea>
+                <textarea class="form-control" name="review" id="exampleFormControlTextarea1" rows="3" placeholder="Optional Description (500 characters max)"></textarea>
             </div>
             <button type="submit" class="btn btn-primary"> Submit </button>
         </form>
