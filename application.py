@@ -110,7 +110,7 @@ def bookinfo():
             # No optional review
             if not review:
 
-                # Check if the book exists in the table
+                # If the book exists in the table
                 if isBookInBookreview(isbn):
                     usernames = str(db.execute('SELECT "usernames" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
                     usernames = usernames[2:len(usernames) - 3]
@@ -118,8 +118,8 @@ def bookinfo():
                     usernames.append(username)
                     usernames = str(usernames)
 
-                    db.execute('UPDATE "bookreview" SET "ratings" = "ratings" + :ratings, "ratingsNum" = "ratingsNum" + 1, "usernames" = :usernames',
-                        {"ratings":rating, "usernames":usernames})
+                    db.execute('UPDATE "bookreview" SET "ratings" = "ratings" + :ratings, "ratingsNum" = "ratingsNum" + 1, "usernames" = :usernames WHERE \
+                    "isbn"=:isbn', {"ratings":rating, "usernames":usernames, "isbn":isbn})
                     db.commit()
 
                 # Book does not exist
@@ -133,7 +133,7 @@ def bookinfo():
 
             # Optional review
             else:
-                # Check if the book exists in the table
+                # If the book exists in the table
                 if isBookInBookreview(isbn):
                     usernames = str(db.execute('SELECT "usernames" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
                     usernames = usernames[2:len(usernames) - 3]
@@ -142,22 +142,21 @@ def bookinfo():
                     usernames = str(usernames)
 
                     reviews = str(db.execute('SELECT "reviews" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
-                    reviews = reviews[1:len(reviews) - 2]
+                    temp = reviews[1:len(reviews) - 2]
 
                     # The book exists but no reviews yet
-                    if reviews == "None":
+                    if temp == "None":
                         reviews = str({username:review})
 
                     # The book has a review already
                     else:
-                        reviews = str(db.execute('SELECT "reviews" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
                         reviews = reviews[2:len(reviews) - 3]
                         reviews = ast.literal_eval(reviews)
                         reviews[username] = review
                         reviews = str(reviews)
 
-                    db.execute('UPDATE "bookreview" SET "ratings" = "ratings" + :ratings, "ratingsNum" = "ratingsNum" + 1, "usernames" = :usernames, "reviews" = :reviews',
-                        {"ratings":rating, "usernames":usernames, "reviews":reviews})
+                    db.execute('UPDATE "bookreview" SET "ratings" = "ratings" + :ratings, "ratingsNum" = "ratingsNum" + 1, "usernames" = :usernames, "reviews" = :reviews WHERE \
+                    "isbn" = :isbn', {"ratings":rating, "usernames":usernames, "reviews":reviews, "isbn":isbn})
                     db.commit()
 
                 # Book does not exist
@@ -176,7 +175,7 @@ def bookinfo():
         ######
 
         rating, ratingNum, avgRating = 0, 0, 0.0
-        reviews = {}
+        reviews2 = {}
 
         # Check if the book exists in the table
         # Then gets the ratings from the database
@@ -185,12 +184,12 @@ def bookinfo():
             ratingNum = list(db.execute('SELECT "ratingsNum" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())[0]
             avgRating = round( int(rating) / int(ratingNum), 2)
 
-            reviews = str(db.execute('SELECT "reviews" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
-            temp = reviews[1:len(reviews) - 2]
+            reviews2 = str(db.execute('SELECT "reviews" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
+            temp = reviews2[1:len(reviews2) - 2]
 
             if temp != "None":
-                reviews = reviews[2:len(reviews) - 3]
-                reviews = ast.literal_eval(reviews)
+                reviews2 = reviews2[2:len(reviews2) - 3]
+                reviews2 = ast.literal_eval(reviews2)
 
         # Goodreads API
         res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": KEY, "isbns": isbn})
@@ -198,7 +197,7 @@ def bookinfo():
         number_rating = res.json()['books'][0]['work_ratings_count']
 
         return render_template("bookinfo.html", title=title, author=author, year=year, isbn=isbn,
-            average_rating=average_rating, number_rating=number_rating, avgRating=avgRating, ratingNum=ratingNum, reviews=reviews)
+            average_rating=average_rating, number_rating=number_rating, avgRating=avgRating, ratingNum=ratingNum, reviews=reviews2)
 
 
     else:

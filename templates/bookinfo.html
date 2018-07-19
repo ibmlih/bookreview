@@ -22,14 +22,21 @@
         </ul>
         <br>
         <h2> Reviews </h2>
-        <ul>
+
+        <div class="row">
             {% for username, review in reviews.items() %}
-                <li> {{ review }} <br> - {{ username }}</li>
+                <div class="card" style="width: 18rem;" class="col">
+                    <div class="card-body">
+                        <p class="card-text">{{ review }}</p>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ username }}</h6>
+                    </div>
+                </div>
             {% endfor %}
-            {% if not reviews %}
-                No Reviews
-            {% endif %}
-        </ul>
+        </div>
+        {% if not reviews %}
+            No Reviews
+        {% endif %}
+
 
         <br>
         <h2> Leave a Review </h2>
@@ -45,7 +52,7 @@
                       <option value="4">4 (Great)</option>
                       <option value="5">5 (Excellent)</option>
                 </select>
-                <textarea class="form-control" name="review" id="exampleFormControlTextarea1" rows="3" placeholder="Optional Description (500 characters max)"></textarea>
+                <textarea maxlength="500" class="form-control" name="review" id="exampleFormControlTextarea1" rows="3" placeholder="Optional Description (500 characters max)"></textarea>
             </div>
             <button type="submit" class="btn btn-primary"> Submit </button>
         </form>
