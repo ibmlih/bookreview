@@ -6,14 +6,14 @@
 
 {% block body %}
     <form action={{ url_for('logout') }} class="col-3">
-        <button type="submit" class="btn btn-outline-danger">Logout</button>
+        <button type="submit" class="btn btn-outline-danger">Logout as {{g.user}}</button>
     </form>
 
     <div class="container">
         <form action={{ url_for('search') }} method="post" class="col-9">
             <div class="form-group">
-                <label for="exampleInputEmail1">Search for Books</label>
-                <input type="text" class="form-control" name="search" placeholder="ISBN, Title, or Author">
+                <label for="exampleInputEmail1"><h3>Search for Books</h3></label>
+                <input type="text" class="form-control" name="search" placeholder="Title, Author, or ISBN">
             </div>
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
@@ -21,16 +21,21 @@
 
     <div class="container">
         <br>
-        {% if result == []%}
-            <h3> No result found </h3>
-        {% endif %}
+
+        <div class="col-5">
+            {% if result == []%}
+                <h4> No result found </h4>
+            {% endif %}
+        </div>
 
         <ol>
             {% for row in result %}
             <br>
                 <li>
+                    <h4>
                     <a href="{{ url_for('bookinfo', title=row.title, author=row.author, year=row.year, isbn=row.isbn) }}"> {{ row.title }}  </a>
                     by {{ row.author }}
+                    </h4>
                 </li>
             {% endfor %}
         </ol>

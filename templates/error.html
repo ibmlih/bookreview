@@ -7,11 +7,11 @@
 {% block body %}
 <div class="container">
     <br>
-    <h1> Error </h1>
+    <h1> Error: </h1>
     <h3> {{ msg }} </h3>
-
+    <br>
     <form action={{ url_for( url ) }}>
-        <button type="submit" class="btn btn-secondary">Retry</button>
+        <button type="submit" class="btn btn-primary">Retry</button>
     </form>
 </div>
 {% endblock %}

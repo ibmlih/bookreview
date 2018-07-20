@@ -6,14 +6,14 @@
 
 {% block body %}
     <form action={{ url_for('logout') }} class="col-3">
-        <button type="submit" class="btn btn-outline-danger">Logout</button>
+        <button type="submit" class="btn btn-outline-danger">Logout as {{username}}</button>
     </form>
 
     <div class="container">
         <form action={{ url_for('search') }} method="post" class="col-9">
             <div class="form-group">
-                <label for="exampleInputEmail1">Search for Books</label>
-                <input type="text" class="form-control" name="search" placeholder="ISBN, Title, or Author">
+                <label for="exampleInputEmail1"><h3>Search for Books</h3></label>
+                <input type="text" class="form-control" name="search" placeholder="Title, Author, or ISBN">
             </div>
             <button type="submit" class="btn btn-primary">Search</button>
         </form>

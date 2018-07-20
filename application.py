@@ -57,12 +57,12 @@ def index():
 def search():
     # Display Search Bar
     if g.user and request.method == 'GET':
-        return render_template("search.html")
+        return render_template("search.html", username=g.user)
 
     # Searching
     elif g.user and request.method == 'POST':
         search = request.form.get("search")
-        return redirect(url_for('display', search=search))
+        return redirect(url_for('display', search=search, username=g.user))
 
     # Not logged in
     else:
@@ -75,7 +75,7 @@ def display(search):
         result = db.execute('SELECT "title", "author", "year", "isbn" FROM "book" WHERE UPPER("title") LIKE UPPER(:search)\
             OR UPPER("author") LIKE UPPER(:search) OR UPPER("isbn") LIKE UPPER(:search)', {"search":'%'+search+'%'}).fetchall()
 
-        return render_template("display.html", result=result)
+        return render_template("display.html", result=result, username=g.user)
 
     else:
         return render_template("error.html", msg="Please login first.", url="index")

@@ -5,44 +5,74 @@
 {% endblock %}
 
 {% block body %}
+
     <div class="container">
         <br>
-        <h1> Title: {{ title }} </h1>
-        <h3> Author: {{ author }} </h3>
-        <h4> Publication year: {{ year }} </h4>
-        <h5> ISBN: {{ isbn }} </h5>
-        <br>
-        <h4> User ratings: {{ avgRating }} (out of {{ ratingNum }} users)
-        <br>
-        <br>
-        <h3> From Goodreads: </h3>
-        <ul>
-            <li><h3> Average Rating: {{ average_rating }} </h3></li>
-            <li><h3> Number of Ratings Received: {{ number_rating }} </h3></li>
-        </ul>
-        <br>
-        <h2> Reviews </h2>
-
-        <div class="row">
-            {% if reviews %}
-                {% for username, review in reviews.items() %}
-                    <div class="card" style="width: 18rem;" class="col">
-                        <div class="card-body">
-                            <p class="card-text">{{ review }}</p>
-                            <h6 class="card-subtitle mb-2 text-muted">{{ username }}</h6>
-                        </div>
-                    </div>
-                {% endfor %}
-            {% endif %}
-            <br>
+        <!-- <div class="row justify-content-center">
+            <img style="float:left" src="http://covers.openlibrary.org/b/isbn/{{ isbn }}-L.jpg" />
+            <h1> Title: {{ title }} </h1>
+            <h3> Author: {{ author }} </h3>
+            <h4> Publication year: {{ year }} </h4>
+            <h5> ISBN: {{ isbn }} </h5>
+        </div> -->
+        <div class="card" style="width: 20rem; float:left;">
+            <img class="card-img-top" src="http://covers.openlibrary.org/b/isbn/{{ isbn }}-L.jpg" alt="Card image cap">
         </div>
 
-        {% if not reviews %}
-            No Reviews
-            <br>
-        {% endif %}
+        <div class="card" style="width: 20rem; float:left;">
+            <!-- <img class="card-img-top" src="http://covers.openlibrary.org/b/isbn/{{ isbn }}-L.jpg" alt="Card image cap"> -->
+            <div class="card-body">
+                <h5 class="card-title">Title: {{ title }}</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Author: {{ author }}</li>
+                <li class="list-group-item">Publication year: {{ year }}</li>
+                <li class="list-group-item">ISBN: {{ isbn }}</li>
+            </ul>
+        </div>
 
-        <br>
+        <div class="card" style="width: 20rem; float:left;">
+            <div class="card-body">
+                <h5 class="card-title"> Ratings </h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">{{ avgRating }}/5 Stars</li>
+                <li class="list-group-item">{{ ratingNum }} Users Rated</li>
+            </ul>
+            <div class="card-body">
+                <h5 class="card-title"> From Goodreads </h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">{{ average_rating }}/5 Stars</li>
+                <li class="list-group-item">{{ number_rating }} Users Rated</li>
+            </ul>
+        </div>
+
+        <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+        <div class="review">
+            <h2> Reviews </h2>
+            <div class="row">
+                {% if reviews %}
+                    {% for username, review in reviews.items() %}
+                        <div class="card" style="width: 18rem;" class="col">
+                            <div class="card-body">
+                                <p class="card-text">{{ review }}</p>
+                                <h6 class="card-subtitle mb-2 text-muted">- {{ username }}</h6>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <br>
+            </div>
+
+            {% if not reviews %}
+                <h6>No Reviews</h6>
+                <br>
+            {% endif %}
+        </div>
+
+        <br> <br>
         <h2> Leave a Review </h2>
         <br>
 

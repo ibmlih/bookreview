@@ -6,9 +6,11 @@
 
 {% block body %}
 <div class="container">
-    <div class="col-5">
-        <br>
-        <h3> Please Sign Up to Continue </h3>
+    <div class="row justify-content-center">
+        <div class="col-5">
+            <br>
+            <h3> Please Sign Up to Continue </h3>
+        </div>
     </div>
 
     <form action={{ url_for( 'signup') }} method="post" class="col-3">
