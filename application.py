@@ -84,10 +84,7 @@ def display(search):
 @app.route("/bookinfo", methods=['GET', 'POST'])
 def bookinfo():
     if g.user and (request.method == "GET" or request.method == "POST"):
-        title = request.args.get("title")
-        author = request.args.get("author")
-        year = request.args.get("year")
-        isbn = request.args.get("isbn")
+        title, author, year, isbn = request.args.get("title"), request.args.get("author"), request.args.get("year"), request.args.get("isbn")
 
         if request.method == "POST":
             rating = request.form.get("rating")
@@ -98,49 +95,25 @@ def bookinfo():
             if rating == "Ratings":
                 return render_template("error.html", msg="Please rate the book.", url="search")
 
-            # Already submitted a review
+            # If the book exists in the table
             if isBookInBookreview(isbn):
-                usernameList = str(db.execute('SELECT "usernames" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
-                usernameList = usernameList[2:len(usernameList) - 3]
-                usernameList = ast.literal_eval(usernameList)
+                usernames = str(db.execute('SELECT "usernames" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
+                usernames = usernames[2:len(usernames) - 3]
+                usernames = ast.literal_eval(usernames)
 
-                if username in usernameList:
+                # Already submitted a review
+                if username in usernames:
                     return render_template("error.html", msg="You already reviewed this book.", url="search")
 
-            # No optional review
-            if not review:
+                usernames = str(usernames.append(username))
 
-                # If the book exists in the table
-                if isBookInBookreview(isbn):
-                    usernames = str(db.execute('SELECT "usernames" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
-                    usernames = usernames[2:len(usernames) - 3]
-                    usernames = ast.literal_eval(usernames)
-                    usernames.append(username)
-                    usernames = str(usernames)
-
-                    db.execute('UPDATE "bookreview" SET "ratings" = "ratings" + :ratings, "ratingsNum" = "ratingsNum" + 1, "usernames" = :usernames WHERE \
-                    "isbn"=:isbn', {"ratings":rating, "usernames":usernames, "isbn":isbn})
+                # No review submitted
+                if not review:
+                    db.execute('UPDATE "bookreview" SET "ratings" = "ratings" + :ratings, "ratingsNum" = "ratingsNum" + 1, "usernames" = :usernames \
+                        WHERE "isbn"=:isbn', {"ratings":rating, "usernames":usernames, "isbn":isbn})
                     db.commit()
 
-                # Book does not exist
                 else:
-                    usernameList = [username]
-                    usernameString = str(usernameList)
-                    # Insert into database
-                    db.execute('INSERT INTO "bookreview" ("isbn", "ratings", "ratingsNum", "usernames") VALUES (:isbn, :ratings, :ratingsNum, :username)',
-                        {"isbn":isbn, "ratings":rating, "ratingsNum": 1, "username":usernameString})
-                    db.commit()
-
-            # Optional review
-            else:
-                # If the book exists in the table
-                if isBookInBookreview(isbn):
-                    usernames = str(db.execute('SELECT "usernames" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
-                    usernames = usernames[2:len(usernames) - 3]
-                    usernames = ast.literal_eval(usernames)
-                    usernames.append(username)
-                    usernames = str(usernames)
-
                     reviews = str(db.execute('SELECT "reviews" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
                     temp = reviews[1:len(reviews) - 2]
 
@@ -150,55 +123,54 @@ def bookinfo():
 
                     # The book has a review already
                     else:
-                        reviews = reviews[2:len(reviews) - 3]
-                        reviews = ast.literal_eval(reviews)
+                        reviews = ast.literal_eval(reviews[2:len(reviews) - 3])
                         reviews[username] = review
                         reviews = str(reviews)
 
-                    db.execute('UPDATE "bookreview" SET "ratings" = "ratings" + :ratings, "ratingsNum" = "ratingsNum" + 1, "usernames" = :usernames, "reviews" = :reviews WHERE \
-                    "isbn" = :isbn', {"ratings":rating, "usernames":usernames, "reviews":reviews, "isbn":isbn})
+                    db.execute('UPDATE "bookreview" SET "ratings" = "ratings" + :ratings, "ratingsNum" = "ratingsNum" + 1, "usernames" = :usernames, \
+                        "reviews" = :reviews WHERE "isbn" = :isbn', {"ratings":rating, "usernames":usernames, "reviews":reviews, "isbn":isbn})
                     db.commit()
 
-                # Book does not exist
+            # Book does not exist
+            else:
+                usernameString = str([username])
+
+                # No review submitted
+                if not review:
+                    db.execute('INSERT INTO "bookreview" ("isbn", "ratings", "ratingsNum", "usernames") VALUES (:isbn, :ratings, :ratingsNum, :username)',
+                        {"isbn":isbn, "ratings":rating, "ratingsNum": 1, "username":usernameString})
+                    db.commit()
+
                 else:
-                    usernameList = [username]
-                    usernameString = str(usernameList)
                     reviews = str({username:review})
-
-                    # Insert into database
-                    db.execute('INSERT INTO "bookreview" ("isbn", "ratings", "ratingsNum", "usernames", "reviews") VALUES (:isbn, :ratings, :ratingsNum, :username, :reviews)',
-                        {"isbn":isbn, "ratings":rating, "ratingsNum": 1, "username":usernameString, "reviews":reviews})
+                    db.execute('INSERT INTO "bookreview" ("isbn", "ratings", "ratingsNum", "usernames", "reviews") VALUES (:isbn, :ratings, :ratingsNum, \
+                        :username, :reviews)', {"isbn":isbn, "ratings":rating, "ratingsNum": 1, "username":usernameString, "reviews":reviews})
                     db.commit()
 
-
-
-        ######
-
-        rating, ratingNum, avgRating = 0, 0, 0.0
-        reviews2 = {}
+        rating, ratingNum, avgRating, reviews = 0, 0, 0.0, {}
 
         # Check if the book exists in the table
-        # Then gets the ratings from the database
         if isBookInBookreview(isbn):
             rating = list(db.execute('SELECT "ratings" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())[0]
             ratingNum = list(db.execute('SELECT "ratingsNum" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())[0]
             avgRating = round( int(rating) / int(ratingNum), 2)
 
-            reviews2 = str(db.execute('SELECT "reviews" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
-            temp = reviews2[1:len(reviews2) - 2]
+            reviews = str(db.execute('SELECT "reviews" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
+            temp = reviews[1:len(reviews) - 2]
 
             if temp != "None":
-                reviews2 = reviews2[2:len(reviews2) - 3]
-                reviews2 = ast.literal_eval(reviews2)
+                reviews = reviews[2:len(reviews) - 3]
+                reviews = ast.literal_eval(reviews)
+            else:
+                reviews = None
 
         # Goodreads API
         res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": KEY, "isbns": isbn})
         average_rating = res.json()['books'][0]['average_rating']
         number_rating = res.json()['books'][0]['work_ratings_count']
 
-        return render_template("bookinfo.html", title=title, author=author, year=year, isbn=isbn,
-            average_rating=average_rating, number_rating=number_rating, avgRating=avgRating, ratingNum=ratingNum, reviews=reviews2)
-
+        return render_template("bookinfo.html", title=title, author=author, year=year, isbn=isbn, average_rating=average_rating, number_rating=number_rating,
+            avgRating=avgRating, ratingNum=ratingNum, reviews=reviews)
 
     else:
         return render_template("error.html", msg="Please login first.", url="index")

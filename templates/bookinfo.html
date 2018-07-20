@@ -24,19 +24,22 @@
         <h2> Reviews </h2>
 
         <div class="row">
-            {% for username, review in reviews.items() %}
-                <div class="card" style="width: 18rem;" class="col">
-                    <div class="card-body">
-                        <p class="card-text">{{ review }}</p>
-                        <h6 class="card-subtitle mb-2 text-muted">{{ username }}</h6>
+            {% if reviews %}
+                {% for username, review in reviews.items() %}
+                    <div class="card" style="width: 18rem;" class="col">
+                        <div class="card-body">
+                            <p class="card-text">{{ review }}</p>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ username }}</h6>
+                        </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            {% endif %}
         </div>
+
         {% if not reviews %}
             No Reviews
+            <br>
         {% endif %}
-
 
         <br>
         <h2> Leave a Review </h2>
