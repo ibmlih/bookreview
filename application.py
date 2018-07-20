@@ -1,4 +1,4 @@
-import os, requests, ast
+import os, requests, ast, re
 
 from password import isStrongPassword
 from flask import Flask, session, request, render_template, g, redirect, url_for, jsonify
@@ -197,6 +197,37 @@ def bookinfo():
 
 def isBookInBookreview(isbn):
     return db.execute('SELECT "isbn" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).rowcount > 0
+
+
+@app.route("/api/<string:isbn>", methods=['GET'])
+def api(isbn):
+    if db.execute('SELECT * FROM "book" WHERE "isbn" = :isbn', {"isbn": isbn}).rowcount == 0:
+        return jsonify({"error":"Invalid ISBN"}), 404
+
+    info = {"title": "",
+            "author": "",
+            "year": 0,
+            "isbn": str(isbn),
+            "review_count": 0,
+            "average_score": 0.0}
+
+    # Goodreads API
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": KEY, "isbns": isbn})
+    average_score = res.json()['books'][0]['average_rating']
+    review_count = res.json()['books'][0]['work_ratings_count']
+
+    result = str(db.execute('SELECT "title", "author", "year" FROM "book" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
+    result = ast.literal_eval(result)
+
+    title, author, year = result[0], result[1], result[2]
+
+    info["title"] = title
+    info["author"] = author
+    info["year"] = year
+    info["review_count"] = review_count
+    info["average_score"] = average_score
+
+    return jsonify(info)
 
 
 @app.route("/signup", methods=['GET', 'POST'])
