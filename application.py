@@ -62,6 +62,11 @@ def search():
     # Searching
     elif g.user and request.method == 'POST':
         search = request.form.get("search")
+
+        # Checking valid input
+        if len(search) == 0 or (not search.isalnum()):
+            return render_template("error.html", msg="Invalid search.", url="search")
+
         return redirect(url_for('display', search=search, username=g.user))
 
     # Not logged in
@@ -137,6 +142,7 @@ def bookinfo():
                     usernames = str(usernames)
 
                     reviews = str(db.execute('SELECT "reviews" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
+                    reviews = reviews.replace("\\", "")
                     temp = reviews[1:len(reviews) - 2]
 
                     # The book exists but no reviews yet
@@ -166,7 +172,7 @@ def bookinfo():
                     db.commit()
 
         rating, ratingNum, avgRating = 0, 0, 0.0
-        reviews = {}
+        reviews = ""
 
         # Check if the book exists in the table
         if isBookInBookreview(isbn):
@@ -175,6 +181,7 @@ def bookinfo():
             avgRating = round( int(rating) / int(ratingNum), 2)
 
             reviews = str(db.execute('SELECT "reviews" FROM "bookreview" WHERE "isbn" = :isbn', {"isbn": isbn}).fetchone())
+            reviews = reviews.replace("\\", "")
             temp = reviews[1:len(reviews) - 2]
 
             if temp != "None":
